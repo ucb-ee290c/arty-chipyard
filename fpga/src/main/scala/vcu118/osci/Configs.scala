@@ -42,12 +42,12 @@ class WithOsciPeripherals extends Config((site, here, up) => {
     TSIHostParams(
       offchipSerialIfWidth = 1,
       mmioBaseAddress = BigInt(0x64006000),
-      mmioSourceId = 1 << 13, // manager source
+      mmioSourceId = 1 << 4, // manager source
       serdesParams = TSIHostSerdesParams(
         clientPortParams = TLMasterPortParameters.v1(
           clients = Seq(TLMasterParameters.v1(
             name = "tl-tsi-host-serdes",
-            sourceId = IdRange(0, (1 << 13))))),
+            sourceId = IdRange(0, (1 << 4))))),
         managerPortParams = TLSlavePortParameters.v1(
           managers = Seq(TLSlaveParameters.v1(
             address = Seq(AddressSet(0, BigInt("FFFFFFFF", 16))), // access everything on chip

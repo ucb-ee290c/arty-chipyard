@@ -6,7 +6,7 @@ import chisel3.experimental.{IO}
 import freechips.rocketchip.util._
 import freechips.rocketchip.devices.debug._
 
-import chipyard.iobinders.{ComposeIOBinder}
+import chipyard.iobinders.{ComposeIOBinder, OverrideIOBinder}
 
 class WithDebugResetPassthrough extends ComposeIOBinder({
   (system: HasPeripheryDebugModuleImp) => {
@@ -22,3 +22,14 @@ class WithDebugResetPassthrough extends ComposeIOBinder({
     (Seq(io_ndreset, io_sjtag_reset), Nil)
   }
 })
+
+/*
+class WithTSITLIOPassthrough extends OverrideIOBinder({
+  (system: HasPeripheryTSIHostWidget) => {
+    require(system.tsiTLMem.size == 1) // not exposing this
+    require(system.tsiSerial.size == 1)
+    val io_tsi_serial_pins_temp = IO(DataMirror.internal.chiselTypeClone[TSIHostWidgetIO](system.tsiSerial.head)).suggestName("tsi_serial")
+    io_tsi_serial_pins_temp <> system.tsiSerial.head
+    (Seq(io_tsi_tl_mem_pins_temp, io_tsi_serial_pins_temp), Nil)
+  }
+})*/
