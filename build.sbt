@@ -148,7 +148,8 @@ lazy val chipyard = (project in file("generators/chipyard"))
   .dependsOn(testchipip, rocketchip, boom, hwacha, sifive_blocks, sifive_cache, iocell,
     sha3, // On separate line to allow for cleaner tutorial-setup patches
     dsptools, `rocket-dsp-utils`,
-    gemmini, icenet, tracegen, cva6, nvdla, sodor, ibex, fft_generator)
+    gemmini, icenet, tracegen, cva6, nvdla, sodor, ibex, fft_generator,
+    dma, baseband, aes)
   .settings(libraryDependencies ++= rocketLibDeps.value)
   .settings(commonSettings)
 
@@ -279,5 +280,29 @@ lazy val fpga_shells = (project in file("./fpga/fpga-shells"))
   .settings(commonSettings)
 lazy val fpga_platforms = (project in file("./fpga"))
   .dependsOn(chipyard, fpga_shells)
+  .settings(chiselSettings)
+  .settings(commonSettings)
+
+val directoryLayout = Seq(
+  scalaSource in Compile := baseDirectory.value / "src",
+  javaSource in Compile := baseDirectory.value / "resources",
+  resourceDirectory in Compile := baseDirectory.value / "resources",
+  scalaSource in Test := baseDirectory.value / "test",
+  javaSource in Test := baseDirectory.value / "resources",
+  resourceDirectory in Test := baseDirectory.value / "resources",
+)
+
+lazy val aes = (project in file("generators/aes"))
+  .dependsOn(dma)
+  .settings(chiselSettings)
+  .settings(commonSettings)
+
+lazy val baseband = (project in file("generators/baseband"))
+  .dependsOn(dma)
+  .settings(chiselSettings)
+  .settings(commonSettings)
+
+lazy val dma = (project in file("generators/dma"))
+  .dependsOn(rocketchip)
   .settings(chiselSettings)
   .settings(commonSettings)

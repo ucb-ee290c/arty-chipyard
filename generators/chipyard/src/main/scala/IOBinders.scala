@@ -427,3 +427,16 @@ class WithDividerOnlyClockGenerator extends OverrideLazyIOBinder({
     }
   }
 })
+
+import baseband.{CanHavePeripheryBLEBasebandModem, BLEBasebandModemAnalogIO, BLEBasebandModemParams}
+
+class WithBLEBasebandModemPunchthrough(params: BLEBasebandModemParams = BLEBasebandModemParams()) extends OverrideIOBinder({
+  (system: CanHavePeripheryBLEBasebandModem) => {
+    val ports: Seq[BLEBasebandModemAnalogIO] = system.baseband.map({ a =>
+      val analog = IO(new BLEBasebandModemAnalogIO(params)).suggestName("baseband")
+      analog <> a
+      analog
+    }).toSeq
+    (ports, Nil)
+  }
+})

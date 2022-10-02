@@ -30,6 +30,7 @@ import icenet.{CanHavePeripheryIceNIC, SimNetwork, NicLoopback, NICKey, NICIOvon
 
 import scala.reflect.{ClassTag}
 
+
 case object HarnessBinders extends Field[Map[String, (Any, HasHarnessSignalReferences, Seq[Data]) => Unit]](
   Map[String, (Any, HasHarnessSignalReferences, Seq[Data]) => Unit]().withDefaultValue((t: Any, th: HasHarnessSignalReferences, d: Seq[Data]) => ())
 )
@@ -283,7 +284,6 @@ class WithTiedOffDebug extends OverrideHarnessBinder({
   }
 })
 
-
 class WithSerialAdapterTiedOff extends OverrideHarnessBinder({
   (system: CanHavePeripheryTLSerial, th: HasHarnessSignalReferences, ports: Seq[ClockedIO[SerialIO]]) => {
     implicit val p = chipyard.iobinders.GetSystemParameters(system)
@@ -330,7 +330,6 @@ class WithCustomBootPinPlusArg extends OverrideHarnessBinder({
   }
 })
 
-
 class WithClockAndResetFromHarness extends OverrideHarnessBinder({
   (system: HasChipyardPRCI, th: HasHarnessSignalReferences, ports: Seq[Data]) => {
     implicit val p = GetSystemParameters(system)
@@ -343,3 +342,20 @@ class WithClockAndResetFromHarness extends OverrideHarnessBinder({
     })
   }
 })
+
+import baseband._
+
+class WithBLEBasebandModemTiedOff extends OverrideHarnessBinder({
+  (system: CanHavePeripheryBLEBasebandModem, th: HasHarnessSignalReferences, ports: Seq[BLEBasebandModemAnalogIO]) => {
+    ports.map { p => {
+      //p.offChipMode.rx := false.B
+      //p.offChipMode.tx := false.B
+      
+      //p.data.tx.loFSK := 0.U
+      p.data.rx.i.data := 0.U
+      p.data.rx.q.data := 0.U
+      
+    }}
+  }
+})
+

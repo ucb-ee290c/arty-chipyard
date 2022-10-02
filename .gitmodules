@@ -134,3 +134,12 @@
 [submodule "generators/fft-generator"]
 	path = generators/fft-generator
 	url = https://github.com/ucb-bar/FFTGenerator.git
+[submodule "generators/baseband"]
+	path = generators/baseband
+	url = git@github.com:ucberkeley-ee290c/sp21-ble-baseband.git
+[submodule "generators/dma"]
+	path = generators/dma
+	url = https://github.com/ucberkeley-ee290c/sp21-dma
+[submodule "generators/aes"]
+	path = generators/aes
+	url = https://github.com/ucberkeley-ee290c/sp21-aes-rocc-accel
