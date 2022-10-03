@@ -29,15 +29,18 @@ import icenet.{CanHavePeripheryIceNIC, SimNetwork, NicLoopback, NICKey, NICIOvon
 import scala.reflect.{ClassTag}
 
 import chipyard._
+import chipyard.ee290c._
 
 
 class WithTiedBSel extends OverrideHarnessBinder({
   (system: HasPeripheryEE290CBLEModuleImp, th: HasHarnessSignalReferences, ports: Seq[Data]) => {
-    ports.map {
-      case b: Bool =>
-        b := true.B
-      case d: HasPeripheryEE290CBLEBundle =>
-        d.tieoffBoot()
+    withClockAndReset(th.buildtopClock, th.buildtopReset) {
+      ports.map {
+        case b: Bool =>
+          b := true.B
+        case d: HasPeripheryEE290CBLEBundle =>
+          d.tieoffBoot()
+      }
     }
   }
 })
@@ -46,28 +49,34 @@ class WithPlusArgBSel extends OverrideHarnessBinder({
   val plusarg_bsel = PlusArg("ee290c_bsel", default = 1, "1:SPI 0:TSI.")(0)
 
   (system: HasPeripheryEE290CBLEModuleImp, th: HasHarnessSignalReferences, ports: Seq[Data]) => {
-    ports.map {
-      case b: Bool =>
-        b := plusarg_bsel
-      case d: HasPeripheryEE290CBLEBundle =>
-        d.boot := plusarg_bsel
+    withClockAndReset(th.buildtopClock, th.buildtopReset) {
+      ports.map {
+        case b: Bool =>
+          b := plusarg_bsel
+        case d: HasPeripheryEE290CBLEBundle =>
+          d.boot := plusarg_bsel
+      }
     }
   }
 })
 
 class WithADCTiedOff extends OverrideHarnessBinder({
   (system: HasPeripheryADCModuleImp, th: HasHarnessSignalReferences, ports: Seq[ADCAnalogIO]) => {
-    ports.map { p => {
-      p.myadc_data := 0.U(8.W)
-    }}
+    withClockAndReset(th.buildtopClock, th.buildtopReset) {
+      ports.map { p => {
+        p.myadc_data := 0.U(8.W)
+      }}
+    }
   }
 })
 
 class WithADCDummyCounter extends OverrideHarnessBinder({
   (system: HasPeripheryADCModuleImp, th: HasHarnessSignalReferences, ports: Seq[ADCAnalogIO]) => {
-    val dummy_adc = Module(new ADC)
-    ports.map { p => {
-      p.myadc_data := dummy_adc.io.adc.myadc_data
-    }}
+    withClockAndReset(th.buildtopClock, th.buildtopReset) {
+      val dummy_adc = Module(new ADC)
+      ports.map { p => {
+        p.myadc_data := dummy_adc.io.adc.myadc_data
+      }}
+    }
   }
 })

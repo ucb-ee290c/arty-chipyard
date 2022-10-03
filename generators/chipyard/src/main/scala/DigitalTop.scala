@@ -9,6 +9,8 @@ import freechips.rocketchip.devices.tilelink._
 
 import baseband._
 
+import chipyard.ee290c._
+
 // ------------------------------------
 // BOOM and/or Rocket Top Level Systems
 // ------------------------------------
@@ -24,8 +26,8 @@ class DigitalTop(implicit p: Parameters) extends ChipyardSystem
   with sifive.blocks.devices.spi.HasPeripherySPIFlash // Enables optionally adding the sifive SPI flash controller
   with sifive.blocks.devices.spi.HasPeripherySPI // Enables optionally adding the sifive SPI port
   
-  with chipyard.CanHavePeripheryADC // Enables optionally adding the ADC data register
-  with chipyard.HasPeripheryEE290CBLE
+  with chipyard.ee290c.CanHavePeripheryADC // Enables optionally adding the ADC data register
+  with chipyard.ee290c.HasPeripheryEE290CBLE
   
   with baseband.CanHavePeripheryBLEBasebandModem
   
@@ -48,8 +50,8 @@ class DigitalTopModule[+L <: DigitalTop](l: L) extends ChipyardSystemModule(l)
   with sifive.blocks.devices.spi.HasPeripherySPIFlashModuleImp
   with sifive.blocks.devices.spi.HasPeripherySPIModuleImp
  
-  with chipyard.HasPeripheryADCModuleImp
-  with chipyard.HasPeripheryEE290CBLEModuleImp
+  with chipyard.ee290c.HasPeripheryADCModuleImp
+  with chipyard.ee290c.HasPeripheryEE290CBLEModuleImp
  
   with chipyard.example.CanHavePeripheryGCDModuleImp
   with freechips.rocketchip.util.DontTouch

@@ -4,6 +4,7 @@ import chisel3._
 import chisel3.experimental.{Analog, IO, DataMirror}
 
 import chipyard._
+import chipyard.ee290c._
 
 import freechips.rocketchip.config._
 import freechips.rocketchip.diplomacy._

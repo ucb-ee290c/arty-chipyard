@@ -1,4 +1,4 @@
-package chipyard
+package chipyard.ee290c
 
 import freechips.rocketchip.config.{Config}
 import freechips.rocketchip.config._

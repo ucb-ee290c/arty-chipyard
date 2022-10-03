@@ -1,4 +1,4 @@
-package chipyard
+package chipyard.ee290c
 
 import chisel3._
 import chisel3.util._

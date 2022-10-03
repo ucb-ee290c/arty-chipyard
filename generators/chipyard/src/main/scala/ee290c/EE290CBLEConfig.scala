@@ -1,4 +1,4 @@
-package chipyard
+package chipyard.ee290c
 
 import freechips.rocketchip.config.{Config}
 import freechips.rocketchip.config._
@@ -88,8 +88,6 @@ class EE290CBLEConfig extends Config(
   new chipyard.iobinders.WithTraceIOPunchthrough ++
   new chipyard.iobinders.WithExtInterruptIOCells ++
   new chipyard.iobinders.WithCustomBootPin ++
-  new chipyard.iobinders.WithDividerOnlyClockGenerator ++
-
   new chipyard.iobinders.WithDividerOnlyClockGenerator ++
   
   new chipyard.iobinders.WithTraceIOPunchthrough ++

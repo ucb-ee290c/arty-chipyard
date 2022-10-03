@@ -15,9 +15,10 @@ import sifive.blocks.devices.gpio._
 
 import testchipip.{SerialTLKey}
 
-import chipyard.{BuildSystem}
-
-import chipyard.fpga.vcu118.osci.{WithGPIOIOPassthrough, WithI2CIOPassthrough}
+import chipyard.{BuildSystem, WithMulticlockIncoherentBusTopology}
+import chipyard.ee290c._
+import baseband._
+import aes._
 
 class WithDefaultPeripherals extends Config((site, here, up) => {
   case PeripheryUARTKey => List(
@@ -73,7 +74,72 @@ class WithArtyOsciPeripherals extends Config((site, here, up) => {
       ))*/
 })
 
-// DOC include start: AbstractArty and Rocket
+class WithOriginal290CConfig extends Config(
+  new aes.WithAESAccel ++
+
+  new chipyard.harness.WithADCDummyCounter ++
+  // new chipyard.harness.WithADCTiedOff ++
+  new chipyard.iobinders.WithADCPunchthrough ++
+  new WithADC(useAXI4=false) ++
+
+  new WithBSel ++
+  new WithNGPIOs(3) ++                                         // 3 GPIO pins
+  new chipyard.config.WithSPIFlash ++
+  new chipyard.config.WithTLSerialLocation(
+    freechips.rocketchip.subsystem.FBUS,
+    freechips.rocketchip.subsystem.PBUS) ++                    // attach TL serial adapter to f/p busses
+  // new freechips.rocketchip.subsystem.WithBufferlessBroadcastHub ++
+  new freechips.rocketchip.subsystem.WithNoMemPort ++          // remove backing memory
+  new EE290Core ++                                             // single tiny rocket-core
+
+  new chipyard.config.WithTileFrequency(20.0) ++
+  new chipyard.config.WithPeripheryBusFrequency(20.0)++
+  new chipyard.config.WithMemoryBusFrequency(20.0) ++
+  new chipyard.config.WithSystemBusFrequency(20.0) ++
+  new chipyard.config.WithFrontBusFrequency(20.0) ++
+  new chipyard.config.WithControlBusFrequency(20.0) ++
+
+  new chipyard.harness.WithTieOffInterrupts ++                  // tie-off interrupt ports, if present
+  new chipyard.harness.WithTieOffL2FBusAXI ++                   // tie-off external AXI4 master, if present
+  new chipyard.harness.WithCustomBootPinPlusArg ++
+  new chipyard.harness.WithClockAndResetFromHarness ++
+
+  // The IOBinders instantiate ChipTop IOs to match desired digital IOs
+  // IOCells are generated for "Chip-like" IOs, while simulation-only IOs are directly punched through
+  new chipyard.iobinders.WithAXI4MemPunchthrough ++
+  new chipyard.iobinders.WithAXI4MMIOPunchthrough ++
+  new chipyard.iobinders.WithL2FBusAXI4Punchthrough ++
+  new chipyard.iobinders.WithBlockDeviceIOPunchthrough ++
+  new chipyard.iobinders.WithNICIOPunchthrough ++
+  new chipyard.iobinders.WithSerialTLIOCells ++
+  new chipyard.iobinders.WithDebugIOCells ++
+  new chipyard.iobinders.WithUARTIOCells ++
+  new chipyard.iobinders.WithTraceIOPunchthrough ++
+  new chipyard.iobinders.WithExtInterruptIOCells ++
+  new chipyard.iobinders.WithCustomBootPin ++
+  new chipyard.iobinders.WithDividerOnlyClockGenerator ++
+
+  new chipyard.iobinders.WithTraceIOPunchthrough ++
+  new chipyard.iobinders.WithExtInterruptIOCells ++
+
+  new testchipip.WithSerialTLWidth(1) ++
+  new testchipip.WithDefaultSerialTL ++                          // use serialized tilelink port to external serialadapter/harnessRAM0
+
+  new WithEE290CBootROM ++                                       // use our bootrom
+
+  new WithNEntryUART(32, 32) ++                                // add a UART
+  new chipyard.WithMulticlockIncoherentBusTopology ++              // hierarchical buses including mbus+l2
+  new chipyard.config.WithNoSubsystemDrivenClocks ++             // drive the subsystem diplomatic clocks from ChipTop instead of using implicit clocks
+  new chipyard.config.WithInheritBusFrequencyAssignments ++      // Unspecified clocks within a bus will receive the bus frequency if set
+  new chipyard.config.WithPeripheryBusFrequencyAsDefault ++      // Unspecified frequencies with match the pbus frequency (which is always set)
+  new freechips.rocketchip.subsystem.WithJtagDTM ++              // set the debug module to expose a JTAG port
+  new freechips.rocketchip.subsystem.WithNoMMIOPort ++           // no top-level MMIO master port (overrides default set in rocketchip)
+  new freechips.rocketchip.subsystem.WithNoSlavePort ++          // no top-level MMIO slave port (overrides default set in rocketchip)
+  new freechips.rocketchip.subsystem.WithInclusiveCache ++       // use Sifive L2 cache
+  new freechips.rocketchip.subsystem.WithNExtTopInterrupts(0) ++ // no external interrupts
+  new freechips.rocketchip.system.BaseConfig                     // "base" rocketchip system
+)
+
 class WithArtyTweaks extends Config(
   new WithArtyJTAGHarnessBinder ++
   new WithArtyUARTHarnessBinder ++
@@ -82,28 +148,20 @@ class WithArtyTweaks extends Config(
   new freechips.rocketchip.subsystem.WithNBreakpoints(2))
 
 class WithArtyOsciTweaks extends Config(
-  new WithArtyOsciI2C ++
-  new WithArtyOsciGPIO ++
-  // new WithArtyOsciQSPI ++ // TODO
-  new WithArtyOsciTL ++
-  new WithGPIOIOPassthrough ++
-  // new WithTSITLIOPassthrough ++
-  new WithI2CIOPassthrough)
+  // new WithArtyOsciI2C ++
+  new WithQSPIPassthrough ++ // IOBinder
+  new WithGPIOPassthrough ++ // IOBinder
+  new WithArtyOsciGPIO ++ // Harness
+  new WithArtyOsciQSPI ++ // Harness
+  new WithArtyOsciTL // Harness
+)
 
 class TinyRocketArtyConfig extends Config(
-  new WithDefaultPeripherals ++ // TODO: QSPI
+  new WithDefaultPeripherals ++
   new WithArtyTweaks ++
   new chipyard.TinyRocketConfig)
 
-class TinyOsciArtyConfig extends Config(
-  new WithArtyOsciPeripherals ++
+class OsciArtyConfig extends Config(
+  new WithOriginal290CConfig ++
   new WithArtyTweaks ++
-  new WithArtyOsciTweaks ++
-  new chipyard.TinyRocketConfig)
-
-class RocketOsciArtyConfig extends Config(
-  new WithArtyOsciPeripherals ++
-  new WithArtyTweaks ++
-  new WithArtyOsciTweaks ++
-  new chipyard.RocketConfig)
-// DOC include end: AbstractArty and Rocket
+  new WithArtyOsciTweaks)

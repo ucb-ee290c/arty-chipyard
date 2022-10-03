@@ -116,7 +116,7 @@ class WithArtyOsciGPIO extends OverrideHarnessBinder({
       IOBUF(th.ja_2, ports.head.pins(0).toBasePin())
       IOBUF(th.ja_3, ports.head.pins(1).toBasePin())
       IOBUF(th.ja_4, ports.head.pins(2).toBasePin())
-      IOBUF(th.ja_5, ports.head.pins(3).toBasePin())
+      // IOBUF(th.ja_5, ports.head.pins(3).toBasePin())
     }
   }
 })
@@ -124,6 +124,10 @@ class WithArtyOsciGPIO extends OverrideHarnessBinder({
 class WithArtyOsciQSPI extends OverrideHarnessBinder({
   (system: HasPeripherySPIFlashModuleImp, th: ArtyFPGATestHarness, ports: Seq[SPIPortIO]) => {
     th.connectSPIFlash(ports.head, th.clock_32MHz, th.ck_rst)
+    // IOBUF(th.qspi_sck, ports.head.sck)
+    // IOBUF(th.qspi_cs,  ports.head.cs(0))
+
+    // (th.qspi_dq zip ports.head.dq).foreach { case(a, b) => IOBUF(a, b) }
   }
 })
 
