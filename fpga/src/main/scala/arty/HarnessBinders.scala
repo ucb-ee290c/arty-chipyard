@@ -25,7 +25,7 @@ class WithArtyResetHarnessBinder extends ComposeHarnessBinder({
   (system: HasPeripheryDebugModuleImp, th: ArtyFPGATestHarness, ports: Seq[Bool]) => {
     require(ports.size == 2)
 
-    withClockAndReset(th.clock_32MHz, th.ck_rst) {
+    withClockAndReset(th.clock_32MHz, th.hReset) {
       // Debug module reset
       th.dut_ndreset := ports(0)
 
@@ -77,7 +77,7 @@ class WithArtyJTAGHarnessBinder extends OverrideHarnessBinder({
 
 class WithArtyUARTHarnessBinder extends OverrideHarnessBinder({
   (system: HasPeripheryUARTModuleImp, th: ArtyFPGATestHarness, ports: Seq[UARTPortIO]) => {
-    withClockAndReset(th.clock_32MHz, th.ck_rst) {
+    withClockAndReset(th.clock_32MHz, th.hReset) {
       IOBUF(th.uart_rxd_out,  ports.head.txd)
       ports.head.rxd := IOBUF(th.uart_txd_in)
     }
@@ -86,7 +86,7 @@ class WithArtyUARTHarnessBinder extends OverrideHarnessBinder({
 
 class WithArtyOsciI2C extends OverrideHarnessBinder({
   (system: HasPeripheryI2CModuleImp, th: ArtyFPGATestHarness, ports: Seq[I2CPort]) => {
-    withClockAndReset(th.clock_32MHz, th.ck_rst) {
+    withClockAndReset(th.clock_32MHz, th.hReset) {
       // only deals with first set of i2c
       // sda -> ja_0, scl -> ja_1
       val sdaPin = Wire(new BasePin())
@@ -112,10 +112,13 @@ class WithArtyOsciI2C extends OverrideHarnessBinder({
 
 class WithArtyOsciGPIO extends OverrideHarnessBinder({
   (system: HasPeripheryGPIOModuleImp, th: ArtyFPGATestHarness, ports: Seq[GPIOPortIO]) => {
-    withClockAndReset(th.clock_32MHz, th.ck_rst) {
-      IOBUF(th.ja_2, ports.head.pins(0).toBasePin())
-      IOBUF(th.ja_3, ports.head.pins(1).toBasePin())
-      IOBUF(th.ja_4, ports.head.pins(2).toBasePin())
+    withClockAndReset(th.clock_32MHz, th.hReset) {
+      // IOBUF(th.ja_2, ports.head.pins(0).toBasePin())
+      // IOBUF(th.ja_3, ports.head.pins(1).toBasePin())
+      // IOBUF(th.ja_4, ports.head.pins(2).toBasePin())
+      IOBUF(th.led_0, ports.head.pins(0).toBasePin())
+      IOBUF(th.led_1, ports.head.pins(1).toBasePin())
+      IOBUF(th.led_2, ports.head.pins(2).toBasePin())
       // IOBUF(th.ja_5, ports.head.pins(3).toBasePin())
     }
   }
@@ -123,7 +126,7 @@ class WithArtyOsciGPIO extends OverrideHarnessBinder({
 
 class WithArtyOsciQSPI extends OverrideHarnessBinder({
   (system: HasPeripherySPIFlashModuleImp, th: ArtyFPGATestHarness, ports: Seq[SPIPortIO]) => {
-    th.connectSPIFlash(ports.head, th.clock_32MHz, th.ck_rst)
+    th.connectSPIFlash(ports.head, th.clock_32MHz, th.hReset.asBool)
     // IOBUF(th.qspi_sck, ports.head.sck)
     // IOBUF(th.qspi_cs,  ports.head.cs(0))
 
