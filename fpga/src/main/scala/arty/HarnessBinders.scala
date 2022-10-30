@@ -140,7 +140,7 @@ class WithArtyOsciTL extends OverrideHarnessBinder({
     ports.map({ port =>
       // async queue enq clock = port.clock = system clock
       //             deq clock = clock in constructor = tl clock?
-      val bits = SerialAdapter.asyncQueue(port, th.clock_8MHz /* IOBUF(th.jc(6)).asClock */, th.buildtopReset)
+      /* val bits = SerialAdapter.asyncQueue(port, th.clock_8MHz /* IOBUF(th.jc(6)).asClock */, th.buildtopReset)
       withClockAndReset(th.buildtopClock, th.buildtopReset) {
         val ram = SerialAdapter.connectHarnessRAM(system.serdesser.get, bits, th.buildtopReset)
         val serial = ram.module.io.tsi_ser
@@ -150,7 +150,14 @@ class WithArtyOsciTL extends OverrideHarnessBinder({
         IOBUF(th.jc(3), serial.in.ready)
         serial.in.valid := IOBUF(th.jc(4))
         serial.in.bits := IOBUF(th.jc(5)).asUInt()
-      }
+      } */
+      port.bits.out.ready := IOBUF(th.jc(0))
+      IOBUF(th.jc(1), port.bits.out.valid)
+      IOBUF(th.jc(2), port.bits.out.bits(0).asBool()) // TODO: not sure if this works
+      IOBUF(th.jc(3), port.bits.in.ready)
+      port.bits.in.valid := IOBUF(th.jc(4))
+      port.bits.in.bits := IOBUF(th.jc(5)).asUInt()
+      IOBUF(th.jc(6), port.clock.asBool)
     })
   }
 })
