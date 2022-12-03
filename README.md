@@ -1,5 +1,81 @@
 ![CHIPYARD](https://github.com/ucb-bar/chipyard/raw/master/docs/_static/images/chipyard-logo-full.png)
 
+# Osci on Arty
+
+## What is this?
+
+This is a port of the digital side of OsciBear on Arty 35T. In theory it should also work for Arty 100T without any modifications. Not the most elegant code and I don't know what I'm doing sometimes but it works.
+
+## What's included?
+
+Key Functionality:
+
+ 	✓   AES accelerator
+ 	⨯   BLE Baseband
+ 	✓   DMA
+	✓   1 Custom-sized Rocket core
+ 	✓   Adjustable to very slow clock
+
+Periphery:
+
+	✓   JTAG (GDB)
+	✓   UART
+	✓   GPIO x3
+	✓   QSPI
+	✓   1-bit Serial Tilelink
+
+## How to generate a bitstream?
+
+### Set up chipyard
+
+In addition to following the regular chipyard set up process, a couple of extra submodules needs to be added (if they are not already set up). Notably:
+
+- `https://github.com/ucberkeley-ee290c/sp21-aes-rocc-accel` for `generators/aes`
+- `https://github.com:ucberkeley-ee290c/sp21-ble-baseband` for `generators/baseband` (although I think for now this is commented out so probably don't need this)
+- `https://github.com/ucberkeley-ee290c/sp21-dma` for `generators/dma`
+
+### Make bitstream
+
+Once chipyard, the submodules and Vivado has been set-up properly, run the following command under the `fpga` directory:
+
+	make bitstream SUB_PROJECT=arty-osci
+
+Two pre-generated bitstreams are located [here](https://github.com/ucberkeley-ee290c/HAL/tree/main/fpga/osciarty).
+
+### Clock
+
+To aid debugging high speed interfaces like TileLink, the current version generates a bitstream with a very slow clock. This is done through modifying two files.
+
+#### `fpga/fpga-shells/xilinx/arty/tcl/ip.tcl`
+
+Modifications for this file has NOT been uploaded since it's a different submodule and I didn't want to make a separate repo for a 2 line change. But this mostly concerns outputting a slow clock through Xilinx's clock wizard. I changed `CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {65.000}` to `CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {4.687}`, making the built-in divider output a 4.687 MHz signal. This is not strictly necessary as the second file outlines.
+
+#### `fpga/src/main/scala/TestHarness.scala`
+
+Oftentimes even a 4 MHz clock isn't slow enough as is the case when probing signals with jumper wires connected in serial. This is remedied through manually instatiating a clock divider in the TestHarness. Simply change the divider width and divisor to fine tune the output frequency.
+
+Note that I'm doing a divide by 32 on the 4.687 MHz signal, giving a 146.5 KHz clock period.
+
+## How do I hook this up?
+
+The pinouts are found in the `HarnessBinders.scala` file.
+
+For quick reference, JTAG:
+
+	TCK = jd_2
+	TMS = jd_5
+	TDI = jd_4
+	TDO = jd_0
+	SRSTn = jd_6
+
+## TODO
+
+- Test the accelerator and the DMA
+
+## Questions?
+
+Email yrh@berkeley.edu or find me on the BAR Slack.
+
 # Chipyard Framework [![Test](https://github.com/ucb-bar/chipyard/actions/workflows/chipyard-run-tests.yml/badge.svg)](https://github.com/ucb-bar/chipyard/actions)
 
 ## Quick Links
