@@ -10,6 +10,7 @@ import sifive.fpgashells.shell.xilinx.artyshell.{ArtyShell}
 import chipyard.{BuildTop, HasHarnessSignalReferences}
 import chipyard.harness.{ApplyHarnessBinders}
 import chipyard.iobinders.{HasIOBinders}
+import testchipip.ClockDivider
 
 class ArtyFPGATestHarness(override implicit val p: Parameters) extends ArtyShell with HasHarnessSignalReferences {
 
@@ -22,12 +23,19 @@ class ArtyFPGATestHarness(override implicit val p: Parameters) extends ArtyShell
   val dReset = Wire(AsyncReset())
   dReset := reset_core.asAsyncReset
 
+  val slowClock = withClockAndReset(clock_65MHz, hReset) {
+    val divider = Module(new testchipip.ClockDivider(5))
+    divider.io.divisor := 31.U(5.W)
+    divider.io.clockOut
+  }
+
+  val buildtopClock = slowClock // hacked to be 200khz
+
   // default to 32MHz clock
-  withClockAndReset(clock_32MHz, hReset) {
+  withClockAndReset(buildtopClock, hReset) {
     val dut = Module(lazyDut.module)
   }
 
-  val buildtopClock = clock_32MHz
   val buildtopReset = hReset
   val success = false.B
 

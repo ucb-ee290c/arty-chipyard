@@ -25,12 +25,12 @@ class WithArtyResetHarnessBinder extends ComposeHarnessBinder({
   (system: HasPeripheryDebugModuleImp, th: ArtyFPGATestHarness, ports: Seq[Bool]) => {
     require(ports.size == 2)
 
-    withClockAndReset(th.clock_32MHz, th.hReset) {
+    withClockAndReset(th.buildtopClock, th.hReset) {
       // Debug module reset
       th.dut_ndreset := ports(0)
 
       // JTAG reset
-      ports(1) := PowerOnResetFPGAOnly(th.clock_32MHz)
+      ports(1) := PowerOnResetFPGAOnly(th.buildtopClock)
     }
   }
 })
@@ -77,7 +77,7 @@ class WithArtyJTAGHarnessBinder extends OverrideHarnessBinder({
 
 class WithArtyUARTHarnessBinder extends OverrideHarnessBinder({
   (system: HasPeripheryUARTModuleImp, th: ArtyFPGATestHarness, ports: Seq[UARTPortIO]) => {
-    withClockAndReset(th.clock_32MHz, th.hReset) {
+    withClockAndReset(th.buildtopClock, th.hReset) {
       IOBUF(th.uart_rxd_out,  ports.head.txd)
       ports.head.rxd := IOBUF(th.uart_txd_in)
     }
@@ -86,7 +86,7 @@ class WithArtyUARTHarnessBinder extends OverrideHarnessBinder({
 
 class WithArtyOsciI2C extends OverrideHarnessBinder({
   (system: HasPeripheryI2CModuleImp, th: ArtyFPGATestHarness, ports: Seq[I2CPort]) => {
-    withClockAndReset(th.clock_32MHz, th.hReset) {
+    withClockAndReset(th.buildtopClock, th.hReset) {
       // only deals with first set of i2c
       // sda -> ja_0, scl -> ja_1
       val sdaPin = Wire(new BasePin())
@@ -112,7 +112,7 @@ class WithArtyOsciI2C extends OverrideHarnessBinder({
 
 class WithArtyOsciGPIO extends OverrideHarnessBinder({
   (system: HasPeripheryGPIOModuleImp, th: ArtyFPGATestHarness, ports: Seq[GPIOPortIO]) => {
-    withClockAndReset(th.clock_32MHz, th.hReset) {
+    withClockAndReset(th.buildtopClock, th.hReset) {
       // IOBUF(th.ja_2, ports.head.pins(0).toBasePin())
       // IOBUF(th.ja_3, ports.head.pins(1).toBasePin())
       // IOBUF(th.ja_4, ports.head.pins(2).toBasePin())
@@ -126,7 +126,7 @@ class WithArtyOsciGPIO extends OverrideHarnessBinder({
 
 class WithArtyOsciQSPI extends OverrideHarnessBinder({
   (system: HasPeripherySPIFlashModuleImp, th: ArtyFPGATestHarness, ports: Seq[SPIPortIO]) => {
-    th.connectSPIFlash(ports.head, th.clock_32MHz, th.hReset.asBool)
+    th.connectSPIFlash(ports.head, th.buildtopClock, th.hReset.asBool)
     // IOBUF(th.qspi_sck, ports.head.sck)
     // IOBUF(th.qspi_cs,  ports.head.cs(0))
 
@@ -140,7 +140,7 @@ class WithArtyOsciTL extends OverrideHarnessBinder({
     ports.map({ port =>
       // async queue enq clock = port.clock = system clock
       //             deq clock = clock in constructor = tl clock?
-      /* val bits = SerialAdapter.asyncQueue(port, th.clock_8MHz /* IOBUF(th.jc(6)).asClock */, th.buildtopReset)
+      /* val bits = SerialAdapter.asyncQueue(port, th.clock_8MHz IOBUF(th.jc(6)).asClock, th.buildtopReset)
       withClockAndReset(th.buildtopClock, th.buildtopReset) {
         val ram = SerialAdapter.connectHarnessRAM(system.serdesser.get, bits, th.buildtopReset)
         val serial = ram.module.io.tsi_ser
